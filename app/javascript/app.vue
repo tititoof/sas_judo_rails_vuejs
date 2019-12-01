@@ -4,13 +4,12 @@
   </div>
 </template>
 
-<script>
-export default {
-  data: function () {
-    return {
-      message: "Hello Vue! héhé no pain no gain"
-    }
-  }
+<script lang="ts">
+import { Component, Vue } from 'vue-property-decorator'
+
+@Component
+export default class App extends Vue {
+  message: string = 'Hello Vue with Typescript héhé works now commit !!!!'
 }
 </script>
 

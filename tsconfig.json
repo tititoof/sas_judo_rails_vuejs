@@ -1,24 +1,23 @@
 {
-    "compilerOptions": {
-      "module": "ES6",
-      "noImplicitAny": true,
-      "noImplicitThis": true,
-      "noImplicitReturns": true,
-      "sourceMap": true
-    },
+  "compilerOptions": {
+    "declaration": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "lib": ["es6", "dom"],
+    "module": "es6",
+    "moduleResolution": "node",
+    "baseUrl": ".",
     "paths": {
-      "@/*": [
-        "app/javascript/*"
-      ]
+        "*": ["node_modules/*", "app/javascript/*"]
     },
-    "include": [
-      "app/javascript/**/*.ts",
-      "app/javascript/**/*.vue"
-    ],
-    "files": [
-      "src/vue-shims.d.ts"
-    ],
-    "exclude": [
-      "node_modules"
-    ]
-  }
+    "sourceMap": true,
+    "target": "es5"
+  },
+  "exclude": [
+    "**/*.spec.ts",
+    "node_modules",
+    "vendor",
+    "public"
+  ],
+  "compileOnSave": false
+}
