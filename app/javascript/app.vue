@@ -8,7 +8,7 @@
 export default {
   data: function () {
     return {
-      message: "Hello Vue! test tt eeddd always"
+      message: "Hello Vue! héhé no pain no gain"
     }
   }
 }
