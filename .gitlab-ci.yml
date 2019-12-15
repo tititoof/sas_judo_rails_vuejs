@@ -1,41 +1,26 @@
 image: ruby:latest
+cache:
+  paths:
+    - vendor/ruby
 
 variables:
-  BUNDLE_CACHE: "vendor/bundle/"
-  RAILS_ENV: "test"
-  DB_HOST: postgres
-  DB_USERNAME: postgres
-  DB_PASSWORD: ""
-
-cache:
-  untracked: true
-  key: "$CI_BUILD_NAME"
-  paths:
-    - vendor/bundle/
-
-services:
-  - postgres:latest
+  RAILS_ENV: test
+  POSTGRES_DB: test
+  POSTGRES_USER: test
+  POSTGRES_PASSWORD: test-password
 
 before_script:
-  - bundle install --path vendor/bundle
-  - bundle exec rake db:create
-  - bundle exec rake db:migrate
+  - apt-get update -qq && apt-get install -yqq nodejs libpq-dev
+  - gem install bundler --no-ri --no-rdoc
+  - bundle install -j $(nproc) --path vendor
 
-stages:
-  - test
-
-rspec:
-  stage: test
+rails:
+  services:
+    - postgres:latest
   script:
+    - bundle exec rake db:create db:schema:load
     - bundle exec rspec
 
 rubocop:
-  stage: test
   script:
     - bundle exec rubocop
-
-bundle-audit:
-  stage: test
-  script:
-    - bundle exec bundle-audit update
-    - bundle exec bundle-audit check
