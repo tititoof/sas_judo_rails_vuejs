@@ -1,26 +1,16 @@
-image: ruby:latest
-cache:
-  paths:
-    - vendor/ruby
-
-variables:
-  RAILS_ENV: test
-  POSTGRES_DB: test
-  POSTGRES_USER: test
-  POSTGRES_PASSWORD: test-password
-
+# Run before each script
 before_script:
-  - apt-get update -qq && apt-get install -yqq nodejs libpq-dev
-  - gem install bundler --no-ri --no-rdoc
-  - bundle install -j $(nproc) --path vendor
+  - gem install bundler
+  - touch log/application.log
+  - touch log/test.log
+  - bundle install --jobs $(nproc) --path=/cache/bundler
+  - cp config/database.gitlab-ci.yml config/database.yml
+  - "bundle exec rake db:create RAILS_ENV=test"
+  - "RAILS_ENV=test bundle exec rake db:reset"
 
-rails:
-  services:
-    - postgres:latest
-  script:
-    - bundle exec rake db:create db:schema:load
-    - bundle exec rspec
-
-rubocop:
-  script:
-    - bundle exec rubocop
+job1:
+    script: "bundle exec rspec"
+    tags:
+        - ruby
+        - postgres
+        - docker
