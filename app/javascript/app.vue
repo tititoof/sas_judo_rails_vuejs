@@ -18,4 +18,7 @@ p {
   font-size: 2em;
   text-align: center;
 }
+body {
+  background-color: blueviolet
+}
 </style>

@@ -32,3 +32,18 @@ yarn-debug.log*
 
 # mk files
 .mk-lib
+
+# Jenkins files
+/.jenkins/*
+!/.jenkins/.keep
+/.jenkins/jenkins_data/*
+!/.jenkins/jenkins_data/.keep
+
+# gitlab
+./.gitlab/*
+# sonar
+./.sonar/*
+./.scannerwork/*
+# redmine
+./.redmine/*
+# 

@@ -72,6 +72,8 @@ GEM
       regexp_parser (~> 1.5)
       xpath (~> 3.2)
     childprocess (3.0.0)
+    ci_reporter (2.0.0)
+      builder (>= 2.1.2)
     concurrent-ruby (1.1.5)
     crass (1.0.5)
     erubi (1.9.0)
@@ -190,6 +192,7 @@ DEPENDENCIES
   bootsnap (>= 1.4.2)
   byebug
   capybara (>= 2.15)
+  ci_reporter (~> 2.0)
   foreman
   jbuilder (~> 2.7)
   listen (>= 3.0.5, < 3.2)
@@ -203,6 +206,7 @@ DEPENDENCIES
   web-console (>= 3.3.0)
   webdrivers
   webpacker (~> 4.0)
+  zeitwerk (~> 2.2.2)
 
 RUBY VERSION
    ruby 2.6.3p62

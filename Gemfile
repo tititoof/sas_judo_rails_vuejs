@@ -25,9 +25,19 @@ gem 'bootsnap', '>= 1.4.2', require: false
 # Process managing
 gem "foreman"
 
+# Zeitwerk autoloading
+gem 'zeitwerk', '~>2.2.2'
+
+# Code analyser, style guide, vulnerabilities, rspec tests
+gem 'rubocop', require: false
+gem 'brakeman', require: false
+gem 'rspec-rails'
+
 group :development, :test do
   # Call 'byebug' anywhere in the code to stop execution and get a debugger console
   gem 'byebug', platforms: [:mri, :mingw, :x64_mingw]
+  # CI reporter
+  gem 'ci_reporter', '~> 2.0'
 end
 
 group :development do

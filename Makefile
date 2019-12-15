@@ -40,5 +40,8 @@ ps: status ## Alias of status
 clean: confirm ## Clean all data
 	@USER=${USER} $(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_FILE) down
 
-run :
+run:
 	@USER=${USER} $(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_FILE) run $(COMMAND_ARGS)
+
+exec:
+	@USER=${USER} $(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_FILE) exec $(COMMAND_ARGS)

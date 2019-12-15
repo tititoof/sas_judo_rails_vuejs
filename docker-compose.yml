@@ -7,6 +7,7 @@ services:
     environment:
       POSTGRES_PASSWORD: dev_password
     user: $USER
+
   web:
     build: .
     command: bash -c "rm -f tmp/pids/server.pid && bundle exec foreman start -f Procfile.dev"
@@ -19,3 +20,112 @@ services:
     depends_on:
       - db
     user: $USER
+  jenkins:
+    image: jenkins/jenkins:lts
+    ports:
+      - 8080:8080
+    volumes:
+      - .jenkins/jenkins_data:/var/jenkins_home
+      - .:/home/project
+  gitlab:
+    image: gitlab/gitlab-ce:latest
+    container_name: gitlab
+    restart: unless-stopped
+    environment:
+      GITLAB_OMNIBUS_CONFIG: |
+        gitlab_rails['gitlab_shell_ssh_port'] = 8822
+        external_url 'http://gitlab'
+        gitlab_rails['trusted_proxies'] = ['caddy','nginx','apache2']
+    ports:
+      - "8800:80"
+      - "8822:22"
+    volumes:
+      - ./.gitlab/config/gitlab:/etc/gitlab
+      - ./.gitlab/data/gitlab:/var/opt/gitlab
+      - ./.gitlab/logs:/var/log/gitlab
+    networks:
+      - cictl
+
+  gitlab-runner:
+    image: gitlab/gitlab-runner:latest
+    restart: unless-stopped
+    environment:
+      - CI_SERVER_URL=http://localhost:8800/
+      - REGISTRATION_TOKEN=Fy74WP7RkX8YkoyT-Ysa
+      
+      - RUNNER_NAME=sas_judo-runner
+      - REGISTER_NON_INTERACTIVE=true
+      - RUNNER_EXECUTOR=docker
+      - DOCKER_IMAGE=alpine
+      - DOCKER_NETWORK_MODE=gitlab
+    depends_on:
+      - gitlab
+    volumes:
+      - ./.gitlab/config/gitlab-runner:/etc/gitlab-runner
+      - /var/run/docker.sock:/var/run/docker.sock:rw
+    networks:
+      - cictl
+    
+  redmine-db:
+    image: postgres:latest
+    restart: always
+    networks:
+      - cictl
+    
+    volumes:
+      - ./.redmine/postgres:/var/lib/postgresql/data
+    environment:
+      - 'POSTGRES_PASSWORD=password'
+      - 'POSTGRES_DB=redmine'
+
+  redmine:
+    image: redmine:latest
+    restart: always
+    networks:
+      - cictl
+    volumes:
+      - ./.redmine/files:/usr/src/redmine/files
+    ports:
+      - 80:3000
+    environment:
+      - 'REDMINE_DB_POSTGRES=redmine-db'
+      - 'REDMINE_DB_DATABASE=redmine'
+      - 'REDMINE_DB_PASSWORD=password'
+  
+  db-sonar:
+    image: postgres
+    networks:
+      - cictl
+    environment:
+      - POSTGRES_USER=sonar
+      - POSTGRES_PASSWORD=sonar
+      - POSTGRES_DB=sonar
+    volumes:
+      - ./.sonar/postgres:/var/lib/postgresql
+      - ./.sonar/postgres/data:/var/lib/postgresql/data
+
+  sonarqube:
+    image: sonarqube:lts
+    ports:
+      - "9000:9000"
+    networks:
+      - cictl
+    depends_on:
+      - db-sonar
+    environment:
+      - sonar.jdbc.url=jdbc:postgresql://db-sonar:5432/sonar
+      - sonar.jdbc.username=sonar
+      - sonar.jdbc.password=sonar
+    volumes:
+      - ./.sonar/conf:/opt/sonarqube/conf
+      - ./.sonar/data:/opt/sonarqube/data
+      - ./.sonar/extension:/opt/sonarqube/extensions
+      - ./.sonar/logs:/opt/sonarqube/logs
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
+
+networks:
+  cictl:
+    driver: bridge
