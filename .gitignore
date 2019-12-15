@@ -35,15 +35,18 @@ yarn-debug.log*
 
 # Jenkins files
 /.jenkins/*
+/.jenkins/
 !/.jenkins/.keep
 /.jenkins/jenkins_data/*
 !/.jenkins/jenkins_data/.keep
 
 # gitlab
-./.gitlab/*
+/.gitlab/*
+/.gitlab
 # sonar
-./.sonar/*
-./.scannerwork/*
+/.sonar/*
+/.scannerwork/*
 # redmine
-./.redmine/*
-# 
+/.redmine/*
+# drone
+/drone

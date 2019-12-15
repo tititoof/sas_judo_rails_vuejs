@@ -1,0 +1,80 @@
+image: ruby:2.6.5
+
+cache:
+  paths:
+    - vendor/bundle
+    - node_modules
+
+services:
+  - postgres:10.1
+
+variables:
+  BUNDLE_PATH: vendor/bundle
+  DISABLE_SPRING: 1
+  DB_HOST: postgres
+
+before_script:
+  # Install node and some other deps
+  - curl -sL https://deb.nodesource.com/setup_8.x | bash -
+  - apt-get update -yq
+  - apt-get install -y apt-transport-https build-essential cmake nodejs python-software-properties software-properties-common unzip
+  
+  # Install yarn
+  - wget -q -O - https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add -
+  - echo "deb https://dl.yarnpkg.com/debian/ stable main" > /etc/apt/sources.list.d/yarn.list
+  - apt-get update -yq
+  - apt-get install -y yarn
+
+  # Project setup
+  - bundle check || bundle install --jobs $(nproc)
+  - yarn install
+
+  - cp config/database.yml.ci config/database.yml
+  - bundle exec rails db:create RAILS_ENV=test
+  - bundle exec rails db:schema:load RAILS_ENV=test
+  - bundle exec webpack
+
+stages:
+  - test
+  - lint
+  - deploy
+
+rspec:
+  stage: test
+  script:
+      - rspec
+
+brakeman:
+  stage: test
+  script:
+    - bundle exec brakeman -z -q
+
+rubocop:
+  stage: lint
+  script:
+    - bundle exec rubocop
+
+#
+
+#Deploy Production:
+  #stage: deploy
+  #retry: 2
+  #only:
+  #  - master
+  #script:
+  #  - ./bin/setup_heroku
+  #  - dpl --provider=heroku --app=awesome-app --api-key=$HEROKU_API_KEY
+  #  - heroku run rake db:migrate --exit-code --app awesome-app
+  #  - heroku run rake statics:seed --exit-code --app awesome-app
+
+#Deploy Staging:
+  #stage: deploy
+  #allow_failure: true
+  #retry: 2
+  #except:
+  #  - master
+  #script:
+  #  - ./bin/setup_heroku
+  #  - dpl --provider=heroku --app=awesome-app-staging --api-key=$HEROKU_API_KEY
+  #  - heroku run rake db:migrate --exit-code --app awesome-app-staging
+  #  - heroku run rake statics:seed --exit-code --app awesome-app-staging
