@@ -10,7 +10,4 @@ before_script:
 
 job1:
     script: "bundle exec rspec"
-    tags:
-        - ruby
-        - postgres
-        - docker
+    

@@ -50,7 +50,7 @@ services:
     image: gitlab/gitlab-runner:latest
     restart: unless-stopped
     environment:
-      - CI_SERVER_URL=http://localhost:8800/
+      - CI_SERVER_URL=http://gitlab/
       - REGISTRATION_TOKEN=Fy74WP7RkX8YkoyT-Ysa
       
       - RUNNER_NAME=sas_judo-runner
