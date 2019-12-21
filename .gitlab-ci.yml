@@ -1,35 +1,212 @@
-services:
-  - postgres:11-alpine
-
+image: ruby:2.6.5
 stages:
-  - test
   - build
+  - test
+  - report
+  - deploy
 
 cache:
   paths:
-    - .bundle
-    - vendor/ruby
-
-test:
-  stage: test
-
-  artifacts:
+    - vendor/bundle
+    - node_modules
+.base:
+  image: ruby:2.6.3
+  cache:
+    key: gems_and_packages
     paths:
-      - public/
-    expire_in: 12 hrs
+      - apt-cache/
+      - vendor/ruby
+    policy: pull
+  before_script:
+    - gem install bundler --no-document
+    - bundle install --jobs $(nproc) "${FLAGS[@]}" --path=vendor
 
+services:
+  - postgres:10.1
+.base_db:
+  extends: .base
+  services:
+    - postgres:latest
   variables:
-    RAILS_ENV: test
-    POSTGRES_DB: myapp_test
-    POSTGRES_USER: postgres
+    POSTGRES_DB: my_app_gitlab
+    POSTGRES_USER: my_app
     POSTGRES_PASSWORD: ''
+    RAILS_ENV: gitlab
+  before_script:
+    - export APT_CACHE_DIR=`pwd`/apt-cache && mkdir -pv $APT_CACHE_DIR
+    - apt-get update -qq && apt-get -o dir::cache::archives="$APT_CACHE_DIR" install -yqq nodejs
+    - gem install bundler --no-document
+    - bundle install --jobs $(nproc) "${FLAGS[@]}" --path=vendor
+    - bundle exec rake db:setup
 
+variables:
+  BUNDLE_PATH: vendor/bundle
+  DISABLE_SPRING: 1
+  DB_HOST: postgres
+.base_minimal:
+  image: alpine:latest
+  cache: {}
+
+before_script:
+  - ruby -v
+  - which ruby
+  - gem install bundler --no-ri --no-rdoc
+  - bundle install --quiet
+  - bundle exec rake db:migrate --quiet
+  - bundle exec rake db:test:prepare --quiet
+build:assets_precompile:
+  extends: .base_db
+  stage: build
   script:
-    - apt-get update -qy
-    - apt-get install -y nodejs
-    - bundle install --path .bundle
-    - bundle exec rake db:create db:schema:load RAILS_ENV=test || true
-    - bundle exec rake db:migrate RAILS_ENV=test
+    - bundle exec rake assets:precompile
+
+  # Project setup
+  - bundle check || bundle install --jobs $(nproc)
+  - yarn install
+build:rubocop:
+  extends: .base
+  stage: build
+  cache:
+    policy: pull-push
+  script:
+    - bundle exec rubocop
+
+  - cp config/database.yml.ci config/database.yml
+  - bundle exec rails db:create RAILS_ENV=test
+  - bundle exec rails db:schema:load RAILS_ENV=test
+  - bundle exec webpack
+test:brakeman:
+  extends: .base
+  stage: test
+  allow_failure: true
+  artifacts:
+    name: brakeman_report
+    when: always
+    paths:
+      - brakeman/
+  only:
+    - master
+  script:
+    - bundle exec brakeman --format html -o brakeman/index.html
+
+stages:
+  - test
+  - lint
+  - deploy
+test:bundle_audit:
+  extends: .base
+  allow_failure: true
+  script:
+    - bundle exec bundle audit check --update
+
+rspec:
+test:dawnscanner:
+  extends: .base
+  stage: test
+  allow_failure: true
+  artifacts:
+    name: dawnscanner_report
+    when: always
+    paths:
+      - dawnscanner
+  only:
+    - master
+  script:
+      - rspec
+    - mkdir dawnscanner
+    - bundle exec dawn --html -zF dawnscanner/index.html .
+
+brakeman:
+test:erd:
+  extends: .base_db
+  stage: test
+  allow_failure: true
+  artifacts:
+    name: erd
+    paths:
+      - erd.pdf
+  only:
+    - master
+  script:
+    - bundle exec brakeman -z -q
+    - apt-get -o dir::cache::archives="$APT_CACHE_DIR" install -y -qq graphviz
+    - bundle exec rake erd
+
+rubocop:
+  stage: lint
+test:rspec:
+  extends: .base_db
+  stage: test
+  artifacts:
+    name: coverage_report
+    paths:
+      - coverage/
+  script:
+    - bundle exec rubocop
     - bundle exec rspec
-    - bundle exec cucumber
-    
+
+#
+pages:
+  extends: .base_minimal
+  stage: report
+  allow_failure: true
+  dependencies:
+    - test:brakeman
+    - test:dawnscanner
+    - test:erd
+    - test:rspec
+  artifacts:
+    name: time_tracking_artifacts
+    paths:
+      - public/brakeman
+      - public/coverage
+      - public/dawnscanner
+      - public/erd.pdf
+  only:
+    - master
+  script:
+    - mv brakeman public/ || true
+    - mv coverage public/ || true
+    - mv dawnscanner public/ || true
+    - mv erd.pdf public/ || true
+
+#Deploy Production:
+  #stage: deploy
+  #retry: 2
+  #only:
+  #  - master
+  #script:
+  #  - ./bin/setup_heroku
+  #  - dpl --provider=heroku --app=awesome-app --api-key=$HEROKU_API_KEY
+  #  - heroku run rake db:migrate --exit-code --app awesome-app
+  #  - heroku run rake statics:seed --exit-code --app awesome-app
+deploy:staging:
+  extends: .base
+  stage: deploy
+  only:
+    - staging
+  script:
+    - echo "Deploying to Staging..."
+
+#Deploy Staging:
+  #stage: deploy
+  #allow_failure: true
+  #retry: 2
+  #except:
+  #  - master
+  #script:
+  #  - ./bin/setup_heroku
+  #  - dpl --provider=heroku --app=awesome-app-staging --api-key=$HEROKU_API_KEY
+  #  - heroku run rake db:migrate --exit-code --app awesome-app-staging
+  #  - heroku run rake statics:seed --exit-code --app awesome-app-staging
+deploy:production:
+  extends: .base
+  stage: deploy
+  when: manual
+  environment:
+    name: production
+    url: https://example.com
+  only:
+    - production
+  script:
+    - echo "Deploying to Production..."
