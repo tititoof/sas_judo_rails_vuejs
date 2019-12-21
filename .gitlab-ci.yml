@@ -9,7 +9,7 @@ building:
     - ruby -v
     - which ruby
     - gem install bundler --no-document
-    - bundle install --jobs $(nproc)  "${FLAGS[@]}" RAILS_ENV=test
+    - bundle install --jobs $(nproc)  "${FLAGS[@]}"
 
 rspec:
   stage: test
