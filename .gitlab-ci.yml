@@ -1,14 +1,9 @@
-image: ruby:2.6.5
 stages:
   - build
   - test
   - report
   - deploy
 
-cache:
-  paths:
-    - vendor/bundle
-    - node_modules
 .base:
   image: ruby:2.6.3
   cache:
@@ -21,8 +16,6 @@ cache:
     - gem install bundler --no-document
     - bundle install --jobs $(nproc) "${FLAGS[@]}" --path=vendor
 
-services:
-  - postgres:10.1
 .base_db:
   extends: .base
   services:
@@ -39,22 +32,9 @@ services:
     - bundle install --jobs $(nproc) "${FLAGS[@]}" --path=vendor
     - bundle exec rake db:setup
 
-variables:
-  BUNDLE_PATH: vendor/bundle
-  DISABLE_SPRING: 1
-  DB_HOST: postgres
-
 .base_minimal:
   image: alpine:latest
   cache: {}
-
-before_script:
-  - ruby -v
-  - which ruby
-  - gem install bundler --no-ri --no-rdoc
-  - bundle install --quiet
-  - bundle exec rake db:migrate --quiet
-  - bundle exec rake db:test:prepare --quiet
 
 build:assets_precompile:
   extends: .base_db
@@ -62,9 +42,6 @@ build:assets_precompile:
   script:
     - bundle exec rake assets:precompile
 
-  # Project setup
-  - bundle check || bundle install --jobs $(nproc)
-  - yarn install
 build:rubocop:
   extends: .base
   stage: build
@@ -73,10 +50,6 @@ build:rubocop:
   script:
     - bundle exec rubocop
 
-  - cp config/database.yml.ci config/database.yml
-  - bundle exec rails db:create RAILS_ENV=test
-  - bundle exec rails db:schema:load RAILS_ENV=test
-  - bundle exec webpack
 test:brakeman:
   extends: .base
   stage: test
@@ -91,17 +64,12 @@ test:brakeman:
   script:
     - bundle exec brakeman --format html -o brakeman/index.html
 
-stages:
-  - test
-  - lint
-  - deploy
 test:bundle_audit:
   extends: .base
   allow_failure: true
   script:
     - bundle exec bundle audit check --update
 
-rspec:
 test:dawnscanner:
   extends: .base
   stage: test
@@ -114,11 +82,9 @@ test:dawnscanner:
   only:
     - master
   script:
-      - rspec
     - mkdir dawnscanner
     - bundle exec dawn --html -zF dawnscanner/index.html .
 
-brakeman:
 test:erd:
   extends: .base_db
   stage: test
@@ -130,12 +96,9 @@ test:erd:
   only:
     - master
   script:
-    - bundle exec brakeman -z -q
     - apt-get -o dir::cache::archives="$APT_CACHE_DIR" install -y -qq graphviz
     - bundle exec rake erd
 
-rubocop:
-  stage: lint
 test:rspec:
   extends: .base_db
   stage: test
@@ -144,10 +107,8 @@ test:rspec:
     paths:
       - coverage/
   script:
-    - bundle exec rubocop
     - bundle exec rspec
 
-#
 pages:
   extends: .base_minimal
   stage: report
@@ -172,16 +133,6 @@ pages:
     - mv dawnscanner public/ || true
     - mv erd.pdf public/ || true
 
-#Deploy Production:
-  #stage: deploy
-  #retry: 2
-  #only:
-  #  - master
-  #script:
-  #  - ./bin/setup_heroku
-  #  - dpl --provider=heroku --app=awesome-app --api-key=$HEROKU_API_KEY
-  #  - heroku run rake db:migrate --exit-code --app awesome-app
-  #  - heroku run rake statics:seed --exit-code --app awesome-app
 deploy:staging:
   extends: .base
   stage: deploy
@@ -190,17 +141,6 @@ deploy:staging:
   script:
     - echo "Deploying to Staging..."
 
-#Deploy Staging:
-  #stage: deploy
-  #allow_failure: true
-  #retry: 2
-  #except:
-  #  - master
-  #script:
-  #  - ./bin/setup_heroku
-  #  - dpl --provider=heroku --app=awesome-app-staging --api-key=$HEROKU_API_KEY
-  #  - heroku run rake db:migrate --exit-code --app awesome-app-staging
-  #  - heroku run rake statics:seed --exit-code --app awesome-app-staging
 deploy:production:
   extends: .base
   stage: deploy
