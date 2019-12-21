@@ -11,7 +11,7 @@ test:
   stage: test
 
   services:
-  - postgres:11-alpine
+  - name: postgres:11-alpine
     alias: db-postgres
 
   artifacts:
