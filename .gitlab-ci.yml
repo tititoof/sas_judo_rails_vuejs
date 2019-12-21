@@ -18,7 +18,7 @@ test:
     expire_in: 12 hrs
   variables:
     RAILS_ENV: test
-    POSTGRES_DB: gridmaster_test
+    POSTGRES_DB: myapp_test
     POSTGRES_USER: postgres
     POSTGRES_PASSWORD: ''
   script:
