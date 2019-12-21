@@ -1,4 +1,9 @@
-version: '3'
+version: '3.6'
+
+networks:
+  cictl:
+    driver: bridge
+
 services:
   db:
     image: postgres
@@ -29,16 +34,22 @@ services:
       - .:/home/project
   gitlab:
     image: gitlab/gitlab-ce:latest
-    container_name: gitlab
     restart: unless-stopped
+    hostname: gitlab-web
     environment:
       GITLAB_OMNIBUS_CONFIG: |
         gitlab_rails['gitlab_shell_ssh_port'] = 8822
         external_url 'http://gitlab'
         gitlab_rails['trusted_proxies'] = ['caddy','nginx','apache2']
+        registry_external_url 'http://gitlab:4567'
+        nginx['listen_https'] = false
+        nginx['listen_port'] = 80
+        nginx['custom_gitlab_server_config'] = "set_real_ip_from 172.0.0.0/8;\nreal_ip_header X-Real-IP;\nreal_ip_recursive on;"
     ports:
       - "8800:80"
       - "8822:22"
+      - '443:443'
+      - '4567:4567'
     volumes:
       - ./.gitlab/config/gitlab:/etc/gitlab
       - ./.gitlab/data/gitlab:/var/opt/gitlab
@@ -52,12 +63,10 @@ services:
     environment:
       - CI_SERVER_URL=http://gitlab/
       - REGISTRATION_TOKEN=Fy74WP7RkX8YkoyT-Ysa
-      
       - RUNNER_NAME=sas_judo-runner
       - REGISTER_NON_INTERACTIVE=true
       - RUNNER_EXECUTOR=docker
       - DOCKER_IMAGE=alpine
-      - DOCKER_NETWORK_MODE=gitlab
     depends_on:
       - gitlab
     volumes:
@@ -126,6 +135,3 @@ services:
         soft: 65536
         hard: 65536
 
-networks:
-  cictl:
-    driver: bridge

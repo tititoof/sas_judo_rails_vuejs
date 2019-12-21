@@ -1,3 +1,5 @@
+
+
 # Run before each script
 before_script:
   - gem install bundler
@@ -8,6 +10,35 @@ before_script:
   - "bundle exec rake db:create RAILS_ENV=test"
   - "RAILS_ENV=test bundle exec rake db:reset"
 
-job1:
-    script: "bundle exec rspec"
+stages:
+  - test
+  - build
+
+cache:
+  paths:
+    - .bundle
+    - vendor/ruby
+
+test:
+  stage: test
+
+  services:
+    - postgres:11-alpine
+  artifacts:
+    paths:
+      - public/
+    expire_in: 12 hrs
+  variables:
+    RAILS_ENV: test
+    POSTGRES_DB: gridmaster_test
+    POSTGRES_USER: postgres
+    POSTGRES_PASSWORD: ''
+  script:
+    - apt-get update -qy
+    - apt-get install -y nodejs
+    - bundle install --path .bundle
+    - bundle exec rake db:create db:schema:load RAILS_ENV=test || true
+    - bundle exec rake db:migrate RAILS_ENV=test
+    - bundle exec rspec
+    - bundle exec cucumber
     
