@@ -12,7 +12,7 @@ test:
 
   services:
   - name: postgres:11-alpine
-    alias: db-postgres
+    alias: postgres
 
   artifacts:
     paths:
