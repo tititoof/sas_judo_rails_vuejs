@@ -1,4 +1,4 @@
-image: ruby:latest
+image: ruby:2.6.3
 
 variables:
   BUNDLE_CACHE: "vendor/bundle/"
