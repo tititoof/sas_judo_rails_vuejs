@@ -1,0 +1,29 @@
+version: '3.6'
+
+networks:
+  cictl:
+    driver: bridge
+
+services:
+  db:
+    image: postgres
+    volumes:
+      - ./tmp/db:/var/lib/postgresql/data
+    environment:
+      POSTGRES_PASSWORD: dev_password
+    user: $USER
+
+  web:
+    build: .
+    command: bash -c "rm -f tmp/pids/server.pid && bundle exec foreman start -f Procfile.dev"
+    volumes:
+      - .:/myapp
+      - ./vendor:/usr/local/bundle
+    ports:
+      - "3000:3000"
+      - "3035:3035"
+    depends_on:
+      - db
+    user: $USER
+  
+

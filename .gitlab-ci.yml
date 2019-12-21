@@ -1,41 +1,16 @@
-stages:
-  - build
+image: docker
 
-.base:
-  image: ruby:2.6.3
-  cache:
-    key: gems_and_packages
-    paths:
-      - apt-cache/
-      - vendor/ruby
-    policy: pull
-  before_script:
-    - gem install bundler --no-document
-    - bundle install --jobs $(nproc) "${FLAGS[@]}" --path=vendor
+services:
+  - docker:dind
 
-.base_db:
-  extends: .base
-  services:
-    - name: postgres:latest
-      alias: postgres
-  variables:
-    POSTGRES_DB: myapp_test
-    POSTGRES_USER: postgres
-    POSTGRES_PASSWORD: ''
-    RAILS_ENV: test
-  before_script:
-    - export APT_CACHE_DIR=`pwd`/apt-cache && mkdir -pv $APT_CACHE_DIR
-    - apt-get update -qq && apt-get -o dir::cache::archives="$APT_CACHE_DIR" install -yqq nodejs
-    - gem install bundler --no-document
-    - bundle install --jobs $(nproc) "${FLAGS[@]}" --path=vendor
-    - bundle exec rake db:setup RAILS_ENV=test
+before_script:
+  - apk add --no-cache py-pip
+  - pip install docker-compose
+  - docker-compose -f docker-compose-ci.yml build
+  - docker-compose -f docker-compose-ci.yml up -d
+  # here we can install our dependencies (composer, yarn…)
 
-.base_minimal:
-  image: alpine:latest
-  cache: {}
-
-build:assets_precompile:
-  extends: .base_db
-  stage: build
+tests:
   script:
-    - bundle exec rake assets:precompile
+    # launch our tests
+    - docker-compose exec web bundle exec rubocop
