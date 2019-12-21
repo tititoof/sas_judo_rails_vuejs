@@ -19,10 +19,11 @@ stages:
 .base_db:
   extends: .base
   services:
-    - postgres:latest
+    - name: postgres:latest
+      alias: postgres
   variables:
-    POSTGRES_DB: my_app_gitlab
-    POSTGRES_USER: my_app
+    POSTGRES_DB: myapp_test
+    POSTGRES_USER: postgres
     POSTGRES_PASSWORD: ''
     RAILS_ENV: test
   before_script:
