@@ -54,7 +54,8 @@ before_script:
   - bundle install --quiet
   - bundle exec rake db:migrate --quiet
   - bundle exec rake db:test:prepare --quiet
-build:assets_precompile:
+
+  build:assets_precompile:
   extends: .base_db
   stage: build
   script:
