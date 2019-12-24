@@ -1,10 +1,5 @@
 image: "ruby:2.6.3"
 
-# Add Postgres and Selenium Docker services. A Firefox container is also available.
-services:
-  - postgres:latest
-  - selenium/standalone-chrome:latest
-
 # Set our environment variables. Note it's supplying where Gitlab's
 # Docker service will make Selenium available at. The Postgres
 # config matches a database.yml.gitlab we'll add later.
@@ -13,7 +8,6 @@ variables:
   POSTGRES_USER: "runner"
   POSTGRES_PASSWORD: ""
   RAILS_ENV: "test"
-  SELENIUM_URL: "http://selenium__standalone-chrome:4444/wd/hub"
 
 # Cache gems in between builds. We use the project path slug
 # as the key because one cache per project works well enough 
@@ -29,7 +23,6 @@ cache:
 # install our gem dependences, bundle to the vendor folder so we # can cache them, and finally prep the database.
 before_script:
   - apt-get update -q && apt-get install nodejs libgmp-dev -yqq
-  - cp config/database.yml.gitlab config/database.yml
   - gem install bundler rubocop
   - bundle install -j $(nproc) --path vendor
   - bundle exec rake db:create RAILS_ENV=test
