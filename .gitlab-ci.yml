@@ -1,16 +1,55 @@
-image: docker
+image: "ruby:2.6.3"
 
+# Add Postgres and Selenium Docker services. A Firefox container is also available.
 services:
-  - docker:dind
+  - postgres:latest
+  - selenium/standalone-chrome:latest
 
+# Set our environment variables. Note it's supplying where Gitlab's
+# Docker service will make Selenium available at. The Postgres
+# config matches a database.yml.gitlab we'll add later.
+variables:
+  POSTGRES_DB: "test_db"
+  POSTGRES_USER: "runner"
+  POSTGRES_PASSWORD: ""
+  RAILS_ENV: "test"
+  SELENIUM_URL: "http://selenium__standalone-chrome:4444/wd/hub"
+
+# Cache gems in between builds. We use the project path slug
+# as the key because one cache per project works well enough 
+# for us
+cache:
+  key: ${CI_PROJECT_PATH_SLUG}
+  paths:
+    - vendor/ruby
+
+# Setup shell commands. We need nodejs for asset compilation,
+# And libgmp for the bcrypt gem. Then we override the database
+# configuration with our Gitlab configuration. Now, we can 
+# install our gem dependences, bundle to the vendor folder so we # can cache them, and finally prep the database.
 before_script:
-  - apk add --no-cache py-pip
-  - pip install docker-compose
-  - docker-compose -f docker-compose-ci.yml build
-  - docker-compose -f docker-compose-ci.yml up -d
-  # here we can install our dependencies (composer, yarn…)
+  - apt-get update -q && apt-get install nodejs libgmp-dev -yqq
+  - cp config/database.yml.gitlab config/database.yml
+  - gem install bundler rubocop --no-ri --no-rdoc
+  - bundle install -j $(nproc) --path vendor
+  - rails db:schema:load
 
-tests:
+# We have two jobs, first, we lint the project with Rubocop to
+# keep us honest and clean
+rubocop:
   script:
-    # launch our tests
-    - docker-compose exec web bundle exec rubocop
+  - rubocop
+
+# Then we run our RSpec suite. When we run tests against
+# Selenium, Rails will save screenshots of failures. We capture
+# Them as artifacts so we can grab them through Gitlab's UI
+# later.
+rspec:
+  script:
+  - rspec spec
+  artifacts:
+    when: on_failure
+    expire_in: 1 week
+    paths:
+    - tmp/screenshots/
+    - log/
