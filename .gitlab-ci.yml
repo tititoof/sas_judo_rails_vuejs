@@ -23,6 +23,7 @@ cache:
 # install our gem dependences, bundle to the vendor folder so we # can cache them, and finally prep the database.
 before_script:
   - apt-get update -q && apt-get install nodejs libgmp-dev -yqq
+  - docker network ls
   - gem install bundler rubocop
   - bundle install -j $(nproc) --path vendor
   - bundle exec rake db:create RAILS_ENV=test
