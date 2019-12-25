@@ -1,16 +1,40 @@
-image: jonaskello/docker-and-compose:1.12.1-1.8.0
-services:
-  - docker:1.12.1-dind
+image: "ruby:2.6.3"
 
+services:
+  - postgres:latest
+
+# Set our environment variables. Note it's supplying where Gitlab's
+# Docker service will make Selenium available at. The Postgres
+# config matches a database.yml.gitlab we'll add later.
+variables:
+  POSTGRES_DB: "myapp_test"
+  POSTGRES_USER: "postgres"
+  POSTGRES_PASSWORD: "dev_password"
+  RAILS_ENV: "test"
+
+# Cache gems in between builds. We use the project path slug
+# as the key because one cache per project works well enough 
+# for us
+cache:
+  key: ${CI_PROJECT_PATH_SLUG}
+  paths:
+    - vendor/ruby
+
+# Setup shell commands. We need nodejs for asset compilation,
+# And libgmp for the bcrypt gem. Then we override the database
+# configuration with our Gitlab configuration. Now, we can 
+# install our gem dependences, bundle to the vendor folder so we # can cache them, and finally prep the database.
 before_script:
-  - docker info
-  - docker-compose version
+  - apt-get update -q && apt-get install nodejs libgmp-dev -yqq
+  - gem install bundler rubocop
+  - bundle install -j $(nproc) --path vendor
+  - bundle exec rake db:create RAILS_ENV=test
+  - RAILS_ENV=test bundle exec rake db:reset
 
 # We have two jobs, first, we lint the project with Rubocop to
 # keep us honest and clean
 rubocop:
   script:
-  - docker-compose up -f docker-compose-ci.yml
   - rubocop
 
 # Then we run our RSpec suite. When we run tests against
