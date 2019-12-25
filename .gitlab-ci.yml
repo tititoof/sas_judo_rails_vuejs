@@ -1,4 +1,4 @@
-iimage: jonaskello/docker-and-compose:1.12.1-1.8.0
+image: jonaskello/docker-and-compose:1.12.1-1.8.0
 services:
   - docker:1.12.1-dind
 
@@ -10,8 +10,8 @@ before_script:
 # keep us honest and clean
 rubocop:
   script:
-    - docker-compose up -f docker-compose-ci.yml
-    - rubocop
+  - docker-compose up -f docker-compose-ci.yml
+  - rubocop
 
 # Then we run our RSpec suite. When we run tests against
 # Selenium, Rails will save screenshots of failures. We capture
