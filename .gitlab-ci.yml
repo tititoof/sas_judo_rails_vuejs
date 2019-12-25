@@ -1,7 +1,7 @@
 image: "ruby:2.6.3"
 
 services:
-  - name: postgres:9.6
+  - name: postgres:latest
     alias: db-postgres
     entrypoint: ["docker-entrypoint.sh"]
     command: ["postgres"]
