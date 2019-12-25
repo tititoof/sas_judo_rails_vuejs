@@ -1,12 +1,15 @@
 image: "ruby:2.6.3"
 
+services:
+  - postgres:latest
+
 # Set our environment variables. Note it's supplying where Gitlab's
 # Docker service will make Selenium available at. The Postgres
 # config matches a database.yml.gitlab we'll add later.
 variables:
-  POSTGRES_DB: "test_db"
-  POSTGRES_USER: "runner"
-  POSTGRES_PASSWORD: ""
+  POSTGRES_DB: "myapp_test"
+  POSTGRES_USER: "postgres"
+  POSTGRES_PASSWORD: "dev_password"
   RAILS_ENV: "test"
 
 # Cache gems in between builds. We use the project path slug
@@ -23,7 +26,6 @@ cache:
 # install our gem dependences, bundle to the vendor folder so we # can cache them, and finally prep the database.
 before_script:
   - apt-get update -q && apt-get install nodejs libgmp-dev -yqq
-  - docker network ls
   - gem install bundler rubocop
   - bundle install -j $(nproc) --path vendor
   - bundle exec rake db:create RAILS_ENV=test
