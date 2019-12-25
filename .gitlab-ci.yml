@@ -1,7 +1,7 @@
 image: "ruby:2.6.3"
 
 services:
-  - postgres:latest
+  - postgres:9.6
 
 # Set our environment variables. Note it's supplying where Gitlab's
 # Docker service will make Selenium available at. The Postgres
