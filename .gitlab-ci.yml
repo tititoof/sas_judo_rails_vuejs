@@ -3,8 +3,8 @@ image: "ruby:2.6.3"
 services:
   - name: postgres:9.6
     alias: db-postgres
-    entrypoint: ["/usr/local/bin/db-postgres"]
-    command: ["start"]
+    entrypoint: ["docker-entrypoint.sh"]
+    command: ["postgres"]
 
 # Set our environment variables. Note it's supplying where Gitlab's
 # Docker service will make Selenium available at. The Postgres
