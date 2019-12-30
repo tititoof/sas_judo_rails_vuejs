@@ -1,59 +1,15 @@
-image: "ruby:2.6.3"
-
+image: docker
 services:
-  - name: postgres:latest
-    alias: db-postgres
-    entrypoint: ["docker-entrypoint.sh"]
-    command: ["postgres"]
-
-# Set our environment variables. Note it's supplying where Gitlab's
-# Docker service will make Selenium available at. The Postgres
-# config matches a database.yml.gitlab we'll add later.
-variables:
-  HTTPS_PROXY: "https://10.1.1.1:8090"
-  HTTP_PROXY: "https://10.1.1.1:8090"
-  POSTGRES_DB: "myapp_test"
-  POSTGRES_USER: "postgres"
-  POSTGRES_PASSWORD: "dev_password"
-  PGDATA: "/var/lib/postgresql/data"
-  POSTGRES_INITDB_ARGS: "--encoding=UTF8 --data-checksums"
-  RAILS_ENV: "test"
-
-# Cache gems in between builds. We use the project path slug
-# as the key because one cache per project works well enough 
-# for us
-cache:
-  key: ${CI_PROJECT_PATH_SLUG}
-  paths:
-    - vendor/ruby
-
-# Setup shell commands. We need nodejs for asset compilation,
-# And libgmp for the bcrypt gem. Then we override the database
-# configuration with our Gitlab configuration. Now, we can 
-# install our gem dependences, bundle to the vendor folder so we # can cache them, and finally prep the database.
+  - docker:dind
 before_script:
-  - apt-get update -q && apt-get install nodejs libgmp-dev -yqq
-  - gem install bundler rubocop
-  - bundle install -j $(nproc) --path vendor
-  - bundle exec rake db:create RAILS_ENV=test
-  - RAILS_ENV=test bundle exec rake db:reset
+  - apk update
+  - pip install -U setuptools
+  - apk add python-dev libffi-dev openssl-dev gcc libc-dev make
+  - pip install --upgrade pip
+  - pip install docker-compose
 
-# We have two jobs, first, we lint the project with Rubocop to
-# keep us honest and clean
-rubocop:
-  script:
-  - rubocop
-
-# Then we run our RSpec suite. When we run tests against
-# Selenium, Rails will save screenshots of failures. We capture
-# Them as artifacts so we can grab them through Gitlab's UI
-# later.
-rspec:
-  script:
-  - rspec spec
-  artifacts:
-    when: on_failure
-    expire_in: 1 week
-    paths:
-    - tmp/screenshots/
-    - log/
+  build_image:
+    stage: build
+    script:
+      - docker-compose -f ./docker/docker-compose-ci.yml build
+  
