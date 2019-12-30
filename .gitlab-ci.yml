@@ -1,6 +1,6 @@
-image: jonaskello/docker-and-compose:1.12.1-1.8.0
+image: jonaskello/docker-and-compose:latest
 services:
-  - docker:1.12.1-dind
+  - docker:dind
 
 build_image:
   stage: build
