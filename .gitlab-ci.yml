@@ -1,15 +1,6 @@
-image: docker
+image: jonaskello/docker-and-compose:1.12.1-1.8.0
 services:
-  - docker:dind
-
-before_script:
-  - apk update
-  - apk upgrade
-  - apk add python python-dev py-pip build-base
-  - pip install -U setuptools
-  - apk add python-dev libffi-dev openssl-dev gcc libc-dev make
-  - pip install --upgrade pip
-  - pip install docker-compose
+  - docker:1.12.1-dind
 
 build_image:
   stage: build
