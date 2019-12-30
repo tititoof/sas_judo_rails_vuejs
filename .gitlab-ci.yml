@@ -2,7 +2,7 @@ image: docker
 services:
   - docker:dind
 
-  before_script:
+before_script:
   - apk update
   - pip install -U setuptools
   - apk add python-dev libffi-dev openssl-dev gcc libc-dev make
