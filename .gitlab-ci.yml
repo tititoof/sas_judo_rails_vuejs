@@ -4,7 +4,6 @@ services:
 
 variables:
   DOCKER_DRIVER: overlay2
-  DOCKER_HOST: tcp://localhost:2376
   
 build_image:
   stage: build
