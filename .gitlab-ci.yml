@@ -28,6 +28,7 @@ rspec:
 rubocop:
   stage: code_analyser
   script:
+    - bundle exec rails generate rubocop_rails_config:install
     - bundle exec rubocop
 
 bundle-audit:

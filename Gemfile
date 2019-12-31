@@ -38,6 +38,7 @@ group :development, :test do
   gem 'byebug', platforms: [:mri, :mingw, :x64_mingw]
   # CI reporter
   gem 'ci_reporter', '~> 2.0'
+  gem "rubocop-rails_config"
 end
 
 group :development do
