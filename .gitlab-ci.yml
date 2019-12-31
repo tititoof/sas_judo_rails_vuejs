@@ -19,6 +19,7 @@ build_image:
 launch_image:
   stage: launch
   script:
+    - ls -al
     - docker-compose -f ./docker-compose-ci.yml up -d
     - docker-compose -f ./docker-compose-ci.yml run web yarn install
     - docker-compose -f ./docker-compose-ci.yml run web gem install bundler
