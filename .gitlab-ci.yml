@@ -14,24 +14,23 @@ stages:
 build_image:
   stage: build
   script:
-    - docker-compose -f ./docker-compose-ci.yml build
+    - @USER=${USER} docker-compose -f ./docker-compose-ci.yml build
 
 launch_image:
   stage: launch
   script:
     - ls -al
-    - docker-compose -f ./docker-compose-ci.yml up -d
-    - docker-compose -f ./docker-compose-ci.yml exec web yarn install
-    - docker-compose -f ./docker-compose-ci.yml exec web gem install bundler
-    - docker-compose -f ./docker-compose-ci.yml exec web bundle install
+    - @USER=${USER} docker-compose -f ./docker-compose-ci.yml run web yarn install
+    - @USER=${USER} docker-compose -f ./docker-compose-ci.yml run web gem install bundler
+    - @USER=${USER} docker-compose -f ./docker-compose-ci.yml run web bundle install
 
 test:
   stage: test
   script:
-    - docker-compose -f ./docker-compose-ci.yml run web bundle exec rake db:create db:schema:load
-    - docker-compose -f ./docker-compose-ci.yml run web bundle exec rspec
+    - @USER=${USER} docker-compose -f ./docker-compose-ci.yml run web bundle exec rake db:create db:schema:load
+    - @USER=${USER} docker-compose -f ./docker-compose-ci.yml run web bundle exec rspec
 
 rubocop:
   stage: test
   script:
-    - docker-compose -f ./docker-compose-ci.yml run web bundle exec rubocop
+    - @USER=${USER} docker-compose -f ./docker-compose-ci.yml run web bundle exec rubocop
