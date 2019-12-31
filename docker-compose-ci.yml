@@ -7,7 +7,7 @@ services:
       - ./tmp/db:/var/lib/postgresql/data
     environment:
       POSTGRES_PASSWORD: dev_password
-    user: $USER
+    user: "${UID}:${GID}"
 
   web:
     build: .
@@ -20,6 +20,6 @@ services:
       - "6035:3035"
     depends_on:
       - db
-    user: $USER
+    user: "${UID}:${GID}"
   
 
