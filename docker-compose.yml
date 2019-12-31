@@ -2,7 +2,10 @@ version: '3.6'
 
 networks:
   cictl:
-    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.18.18.0/24
 
 services:
   db:
@@ -12,6 +15,10 @@ services:
     environment:
       POSTGRES_PASSWORD: dev_password
     user: $USER
+    networks:
+      cictl:
+        aliases:
+          - db.localhost
 
   web:
     build: .
@@ -25,6 +32,10 @@ services:
     depends_on:
       - db
     user: $USER
+    networks:
+      - cictl
+          
+  
   jenkins:
     image: jenkins/jenkins:lts
     ports:
@@ -32,6 +43,7 @@ services:
     volumes:
       - .jenkins/jenkins_data:/var/jenkins_home
       - .:/home/project
+  
   gitlab:
     image: gitlab/gitlab-ce:latest
     restart: unless-stopped
