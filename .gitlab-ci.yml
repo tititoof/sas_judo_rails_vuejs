@@ -5,9 +5,29 @@ services:
 variables:
   DOCKER_DRIVER: overlay2
   DOCKER_TLS_CERTDIR: "/certs"
-  
+
+stages:
+  - build
+  - launch
+  - test
+
 build_image:
   stage: build
   script:
     - docker-compose -f ./docker-compose-ci.yml build
-  
+
+launch_image:
+  stage: launch
+  script:
+    - docker-compose -f ./docker-compose-ci.yml up -d
+
+test:
+  stage: test
+  script:
+    - docker-compose -f ./docker-compose-ci.yml run web bundle exec rake db:create db:schema:load
+    - docker-compose -f ./docker-compose-ci.yml run web bundle exec rspec
+
+rubocop:
+  stage: test
+  script:
+    - docker-compose -f ./docker-compose-ci.yml run web bundle exec rubocop
