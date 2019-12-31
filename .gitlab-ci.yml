@@ -17,6 +17,8 @@ before_script:
 
 stages:
   - test
+  - code_analyser
+  - audit
 
 rspec:
   stage: test
@@ -24,12 +26,12 @@ rspec:
     - bundle exec rspec
 
 rubocop:
-  stage: test
+  stage: code_analyser
   script:
     - bundle exec rubocop
 
 bundle-audit:
-  stage: test
+  stage: audit
   script:
     - bundle exec bundle-audit update
     - bundle exec bundle-audit check
