@@ -20,6 +20,7 @@ launch_image:
     - ls -al
     - export UID=${UID}
     - export GID=${GID}
+    - docker-compose -f ./docker-compose-ci.yml build
     - docker-compose -f ./docker-compose-ci.yml run web ls -al
     - docker-compose -f ./docker-compose-ci.yml run web yarn install
     - docker-compose -f ./docker-compose-ci.yml run web gem install bundler
