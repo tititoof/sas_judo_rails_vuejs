@@ -16,8 +16,8 @@ services:
       - .:/myapp
       - ./vendor:/usr/local/bundle
     ports:
-      - "3000:3000"
-      - "3035:3035"
+      - "6000:3000"
+      - "6035:3035"
     depends_on:
       - db
     user: $USER
