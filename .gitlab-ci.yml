@@ -11,6 +11,7 @@ cache:
     - vendor/bundle/
 
 before_script:
+  - apt-get install jq
   - bundle install --path vendor/bundle
   - bundle exec rake db:create
   - bundle exec rake db:migrate
