@@ -17,6 +17,8 @@ endif
 dependencies: check-dependencies ## Check dependencies
 
 up: ## Start all or c=<name> containers in foreground
+	sudo sysctl -w vm.max_map_count=262144
+	sudo sysctl -w fs.file-max=65536
 	@USER=${USER} $(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_FILE) up $(c) --remove-orphans
 
 start: ## Start all or c=<name> containers in background

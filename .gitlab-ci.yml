@@ -34,4 +34,4 @@ rubocop:
 brakeman:
   stage: audit
   script:
-    - brakeman
+    - bundle exec brakeman
