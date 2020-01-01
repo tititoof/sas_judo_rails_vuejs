@@ -39,6 +39,7 @@ brakeman:
 sonarqube:
   stage: audit
   script: 
+    - rm -rf ./sonar-scanner-4.2.0.1873-linux
     - curl --insecure -o ./sonarscanner.zip -L "https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.2.0.1873-linux.zip"
     - unzip sonarscanner.zip
     - ./sonar-scanner-4.2.0.1873-linux/bin/sonar-scanner -Dsonar.projectKey=sas_judo -Dsonar.sources=./app -Dsonar.host.url=http://sonarqube.localhost:9000 -Dsonar.login=0f5637ec7a1dfc79b1ea613803bb16002d74dd86
