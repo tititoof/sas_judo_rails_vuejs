@@ -31,8 +31,7 @@ rubocop:
     - bundle exec rails generate rubocop_rails_config:install
     - bundle exec rubocop
 
-bundle-audit:
+brakeman:
   stage: audit
   script:
-    - bundle exec bundle-audit update
-    - bundle exec bundle-audit check
+    - brakeman
