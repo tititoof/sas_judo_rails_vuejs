@@ -39,14 +39,9 @@ brakeman:
 sonarqube:
   stage: audit
   script: 
-    - rm -rf ./jq
-    - git clone https://github.com/stedolan/jq.git
-    - cd jq
-    - autoreconf -i
-    - ./configure --disable-maintainer-mode
-    - make
-    - sudo make install
-    - cd ..
+    - rm -f ./jq-linux64
+    - curl --insecure -o ./jq -L "https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64"
+    - chmod +x ./jq
     - rm -rf ./sonar-scanner-4.2.0.1873-linux
     - curl --insecure -o ./sonarscanner.zip -L "https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.2.0.1873-linux.zip"
     - unzip sonarscanner.zip
