@@ -35,3 +35,8 @@ brakeman:
   stage: audit
   script:
     - bundle exec brakeman
+
+sonarqube:
+  stage: audit
+  script: 
+    - sonar-scanner -Dsonar.projectKey=sas_judo -Dsonar.sources=./app -Dsonar.host.url=http://localhost:9000 -Dsonar.login=0f5637ec7a1dfc79b1ea613803bb16002d74dd86
