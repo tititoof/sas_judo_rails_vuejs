@@ -130,7 +130,9 @@ services:
     ports:
       - "9000:9000"
     networks:
-      - cictl
+      cictl:
+        aliases:
+          - sonarqube.localhost
     depends_on:
       - db-sonar
     environment:
