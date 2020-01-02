@@ -1,4 +1,4 @@
-STATUS=$(curl -s "http://sonarqube.localhost:9000/api/qualitygates/project_status?projectKey=sas_judo" | jq -r .projectStatus.status)
+STATUS=$(curl -s "http://sonarqube.localhost:9000/api/qualitygates/project_status?projectKey=sas_judo" | ./jq -r .projectStatus.status)
 
 if [ $STATUS = "ERROR" ]
 then
