@@ -67,7 +67,9 @@ services:
       - ./.gitlab/data/gitlab:/var/opt/gitlab
       - ./.gitlab/logs:/var/log/gitlab
     networks:
-      - cictl
+      cictl:
+        aliases:
+          - gitlab.localhost
 
   gitlab-runner:
     image: gitlab/gitlab-runner:latest
